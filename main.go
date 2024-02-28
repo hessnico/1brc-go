@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"io"
 	"log"
 	"os"
-	"io"
+	"time"
 )
 
 // <count>/<min>/<mean>/<max>/
@@ -21,15 +21,16 @@ func main() {
 	wrt := io.MultiWriter(os.Stdout, f)
 	logger.SetOutput(wrt)
 
-	filepaths := [8][8]string{
-		{"./data/measurements10.txt", "10"},
-		{"./data/measurements100.txt", "100"},
-		{"./data/measurements1000.txt", "1000"},
-		{"./data/measurements10000.txt", "10000"},
-		{"./data/measurements100000.txt", "100000"},
-		{"./data/measurements1000000.txt", "1000000"},
-		{"./data/measurements10000000.txt", "10000000"},
-		{"./data/measurements100000000.txt", "10000000"},
+	filepaths := [][]string{
+		//		{"./data/measurements10.txt", "10"},
+		//		{"./data/measurements100.txt", "100"},
+		//		{"./data/measurements1000.txt", "1000"},
+		//		{"./data/measurements10000.txt", "10000"},
+		//		{"./data/measurements100000.txt", "100000"},
+		//		{"./data/measurements1000000.txt", "1000000"},
+		//		{"./data/measurements10000000.txt", "10000000"},
+		//		{"./data/measurements100000000.txt", "10000000"},
+		{"./data/measurements1000000000.txt", "100000000"},
 	}
 
 	logger.Println("\n")
@@ -56,5 +57,3 @@ func first_impl_run(filepath string, logger *log.Logger) {
 	retrieveValues(map_, err)
 	map_ = nil
 }
-
-
