@@ -1,113 +1,60 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"strconv"
-	"strings"
 	"time"
+	"log"
+	"os"
+	"io"
 )
-
-type weatherParser struct {
-	Name    string
-	Weather float64
-}
 
 // <count>/<min>/<mean>/<max>/
 
 func main() {
-	fmt.Println("Hello, World")
+	logger := log.New(os.Stdout, "", 1)
+	f, err := os.OpenFile("./time_logs.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		logger.Fatalf("error opening save file: %v", err)
+	}
+	defer f.Close()
 
+	wrt := io.MultiWriter(os.Stdout, f)
+	logger.SetOutput(wrt)
+
+	filepaths := [8][8]string{
+		{"./data/measurements10.txt", "10"},
+		{"./data/measurements100.txt", "100"},
+		{"./data/measurements1000.txt", "1000"},
+		{"./data/measurements10000.txt", "10000"},
+		{"./data/measurements100000.txt", "100000"},
+		{"./data/measurements1000000.txt", "1000000"},
+		{"./data/measurements10000000.txt", "10000000"},
+		{"./data/measurements100000000.txt", "10000000"},
+	}
+
+	logger.Println("\n")
+	for _, file := range filepaths {
+		calculate_time_per_run(file[0], file[1], logger)
+	}
+}
+
+func calculate_time_per_run(filename string, n_rum string, logger *log.Logger) {
 	start := time.Now()
 
-	retrieveValues(parseFileToMapOrDie("./data/measurements100000000.txt"))
+	first_impl_run(filename, logger)
 
 	t := time.Now()
 	elapsed := t.Sub(start)
-	fmt.Println("Time elapsed: ", elapsed)
+	logger.Println("				Time elapsed:", n_rum, ":", elapsed)
 }
 
-func retrieveValues(m map[string][]float64, err error) {
+func first_impl_run(filepath string, logger *log.Logger) {
+	map_, err := parseFileToMapOrDie(filepath)
 	if err != nil {
-		fmt.Println("Could not retrieve information from file or something else.\nDying...")
+		fmt.Println("fail to parse file into map")
 	}
-
-	for names, values := range m {
-		fmt.Println("-----------------------------------")
-		fmt.Println(names, ": ")
-		// fmt.Println(values)
-		fmt.Println("	min: ", getMinValues(values))
-		fmt.Println("	count: ", len(values))
-		fmt.Println("	max: ", getMaxValues(values)) //
-		fmt.Println("	mean: ", getMean(values))     //
-		fmt.Println("-----------------------------------")
-	}
+	retrieveValues(map_, err)
+	map_ = nil
 }
 
-func getMinValues(values []float64) (min float64) {
-	min = 100
-	for _, v := range values {
-		if v < min {
-			min = v
-		}
-	}
 
-	return
-}
-
-func getMaxValues(values []float64) (max float64) {
-	max = -100
-	for _, v := range values {
-		if v > max {
-			max = v
-		}
-	}
-	return
-}
-
-func getMean(values []float64) (mean float64) {
-	mean = 0
-	for _, v := range values {
-		mean = mean + v
-	}
-	mean = (mean / float64(len(values)))
-	return
-}
-
-func parseFileToMapOrDie(filepath string) (map[string][]float64, error) {
-	m := make(map[string][]float64)
-
-	f, err := os.Open(filepath)
-	if err != nil {
-		fmt.Println(err, "erro abrir file")
-	}
-
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-
-	for scanner.Scan() {
-		records := scanner.Text()
-		u := getInfoFromBufferLine(records)
-
-		m[u.Name] = append(m[u.Name], u.Weather)
-	}
-
-	return m, nil
-}
-
-func convertStringBuffedToFloat(input string) (output float64) {
-	output, err := strconv.ParseFloat(input, 64)
-	if err != nil {
-		fmt.Println("Failed to convert string to float")
-	}
-	return
-}
-
-func getInfoFromBufferLine(input string) (data weatherParser) {
-	splitedInput := strings.Split(input, ";")
-	data.Name = splitedInput[0]
-	data.Weather = convertStringBuffedToFloat(splitedInput[1])
-	return
-}
